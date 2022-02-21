@@ -11,6 +11,10 @@ MECHANICAL_RESIS = 0.025
 FATIGUE_FACTOR = 0.25
 
 CDA_TYPE = 1  # 0:tt 1:std
+#  2 3
+# 1  4
+#  2 3
+CDA_REDUCE_TO = [1, 0.86, 0.62, 0.60, 0.35]
 
 weight = 0
 height = 0
@@ -114,10 +118,13 @@ def wind(x):
 
 
 # requires calibrated wind
-def v(x):
+# is_team: 0 - single race; 1-4 - team position 0-3
+def v(x, pos):
     CdAs = [
-        0.7 * (0.0293 * np.power(height, 0.725) * np.power(weight, 0.425) + 0.0604),
-        0.88 * (0.0267 * np.power(height, 0.725) * np.power(weight, 0.425) + 0.1674)]
+        CDA_REDUCE_TO[pos] * 0.7 * (
+                0.0293 * np.power(height, 0.725) * np.power(weight, 0.425) + 0.0604),
+        CDA_REDUCE_TO[pos] * 0.88 * (
+                0.0267 * np.power(height, 0.725) * np.power(weight, 0.425) + 0.1674)]
 
     current_wind = wind(x)
     current_slope = slope(x)
@@ -200,7 +207,7 @@ def calculate_data():
     # speeds, in m/s ;ys[0]=0
     vs = np.array([0.0] * len(xs))
     for i in range(1, len(xs)):
-        vs[i] = 1 / v(xs[i])
+        vs[i] = 1 / v(xs[i], 0)
 
     ################## Calculating ts (time) at each x using integral ##################
     # times, in s
@@ -372,6 +379,7 @@ def calculate_data():
         "plimData": plims
     }
 
+
 # x = np.arange(500, 2000)
 # y = [0] * len(x)
 # for i, ie in enumerate(x):
@@ -379,3 +387,118 @@ def calculate_data():
 #
 # pl.plot(x, y)
 # pl.show()
+
+def calculate_data_team():
+    # distances, in km
+    xs = np.arange(0, length, 0.2)
+
+    # speeds, in m/s ;ys[0]=0
+    vs = np.array([0.0] * len(xs))
+
+    ps = np.array([0.0] * len(xs))
+
+    single_ps = np.array([0.0] * len(xs))
+    pos_ps = [[0.0] * len(xs),[0.0] * len(xs),[0.0] * len(xs),[0.0] * len(xs)]
+
+    target_dur_lim_m = 10000
+
+    energy_cost = 0
+    time_cost_ref = 0
+
+    #  6 5
+    # 1  4
+    #  2 3
+    current_turn = 1
+
+    global power_data
+
+    for i, ie in enumerate(xs):
+        # find a proper speed at each x at which all team members ride at ease
+
+        try_ps = np.linspace(1, 2000, 10000)
+        target_p = 0
+        target_v = 0
+
+        for j, je in enumerate(try_ps):
+            power_data[0][1] = je
+            try_v = v(ie, 2)
+            try_dl = durlim(0, je, ie)
+            if np.abs(try_v * try_dl - target_dur_lim_m) < 0.05 * target_dur_lim_m:
+                target_p = je
+                target_v = try_v
+                break
+
+        if target_p == 0:
+            print(f"ERROR: No {target_dur_lim_m}m power calculated")
+            return
+
+        vs[i] = 1 / target_v
+        ps[i] = target_p
+
+        print(f"x={ie}km p={target_p} v={target_v * 3.6}kph")
+
+        time_cost_ref += 200 / target_v
+
+        # calculate current position's target power to attain the target speed
+
+        cpos = current_turn
+
+        if cpos == 5:
+            cpos = 3
+        elif cpos == 6:
+            cpos = 2
+
+
+        for j in range(1,5):
+            high = 2000
+            low = 1
+            power_data[0][1] = (high + low) / 2
+
+            cv = v(1, j)
+
+            while np.abs(cv - target_v) > 1:
+                if cv > target_v:
+                    high = power_data[0][1]
+                    power_data[0][1] = (high + low) / 2
+                    cv = v(1, j)
+                else:
+                    low = power_data[0][1]
+                    power_data[0][1] = (high + low) / 2
+                    cv = v(1, j)
+
+            pos_ps[j-1][i]=power_data[0][1]
+
+        single_ps[i]=pos_ps[cpos-1][i]
+
+        print(
+            f"TURN={current_turn} p={single_ps[i]} Energy={single_ps[i] * (200 / target_v)}")
+
+        energy_cost += single_ps[i] * (200 / target_v)
+        if current_turn + 1 > 6:
+            current_turn = 1
+        else:
+            current_turn += 1
+
+    # times, in s
+    ts = [0.0] * len(xs)
+
+    # from km to m
+    lap = (xs[len(xs) - 1] - xs[0]) * 1000
+
+    for i, ie in enumerate(xs):
+        ts[i] = np.sum(vs[0:i + 1] * lap / len(xs))
+
+    print(
+        f"Time Cost={ts[len(ts) - 1]} ref={time_cost_ref} Energy Cost={energy_cost / 1000}kJ")
+
+    pl.title("Power Plan")
+    pl.plot(xs,single_ps,label="Individual",c=(np.array([228, 26, 28]) / 255).reshape((1, -1)),lw=1)
+    for i,ie in enumerate(pos_ps):
+        pl.plot(xs,ie,label=f"Position {i+1}")
+    pl.plot([0,xs[len(xs)-1]],[380,380],c=(np.array([0,0,0]) / 255).reshape((1, -1)),label="FTP")
+    pl.legend()
+    pl.xlabel("Distance / km")
+    pl.ylabel("Power / Watt")
+    pl.show()
+
+    return

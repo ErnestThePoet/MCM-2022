@@ -34,8 +34,8 @@ initialize(weight, height, ftp, energy, length, PROFILE_INDEX, power_data, slope
            hdg_data,
            wind_data)
 
-while abs(3.6 * v(0) - 44.2) > 1e-3:
-    if 3.6 * v(0) > 44.2:
+while abs(3.6 * v(0,0) - 44.2) > 1e-3:
+    if 3.6 * v(0,0) > 44.2:
         high = mid
         mid = (high + low) / 2
         power_data[0][1] = mid
