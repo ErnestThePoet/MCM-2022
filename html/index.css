@@ -1,0 +1,124 @@
+.div-main-container{
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.div-param-panel{
+    width: 97%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    padding: 20px;
+}
+
+.div-data-container{
+    display: flex;
+    flex-direction: column;
+}
+
+.div-power-plan{
+    width: 100%;
+    height: 450px;
+}
+
+.in-param{
+    width: 60px;
+    padding:5px;
+    margin: 0 0 0 10px;
+    font-size: 18px;
+    font-weight: bold;
+    border-radius: 10px;
+}
+
+.div-upper-series-container{
+    width: 100%;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+}
+
+.div-lower-series-container{
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+}
+
+.div-results-container{
+    width: 100%;
+    height: 100px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    padding-top: 10px;
+}
+
+.lbl-result-desc{
+    font-size: 20px;
+}
+
+.lbl-result-value{
+    font-size: 20px;
+    font-weight: bold;
+    color: red;
+    padding: 3px 10px;
+    border: 1px solid black;
+    border-radius: 10px;
+}
+
+.btn-submit{
+    font-weight: bold;
+    width: 200px;
+    height: 100px;
+}
+
+.btn-apply-clear{
+    width: 60px;
+    height: 30px;
+}
+
+.in-series{
+    width: 330px;
+    padding:5px;
+    margin: 0 0 0 10px;
+    font-size: 15px;
+    border-radius: 10px;
+}
+
+.in-long-series{
+    width: 1050px;
+    padding:5px;
+    margin: 0 0 0 10px;
+    font-size: 15px;
+    border-radius: 10px;
+}
+
+.lbl-status-indicator{
+    width: 250px;
+    text-align: center;
+    font-size: 30px;
+    font-weight: bold;
+    color: red;
+}
+
+.div-series-container{
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items:flex-start;
+}
+
+.div-controls-container{
+    margin: 0 10px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    margin-bottom: 20px;
+}
